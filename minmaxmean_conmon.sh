@@ -23,7 +23,7 @@ rm $1_bitrate.tmp
 # We are using bitrate.txt for the data
 gnuplot << EOF
 reset
-set terminal pdf color enhanced rounded size 12,4 fsize 10
+set terminal pdf color enhanced rounded size 12,4 fsize 12
 #unset key # Removes legend of the plot
 
 set timefmt "%s"
