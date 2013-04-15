@@ -1,11 +1,14 @@
 #! /bin/sh
-# Calculates average of CPU and RAM of all logfiles
+#
 
-# Deletes spaces in folder name to avoid errors
 find $1 -depth -name "* *" -execdir rename 's/ /_/g' "{}" \;
 
 MACHINE_COUNTER=0
 COUNTER_TOTAL=0
+
+
+
+
 CPUSUM=0
 MEMSUM=0
 COUNTER=0
@@ -15,15 +18,14 @@ TOTALSTRD_DEV_CPU=0
 FILENAME=$(echo $1 | sed -e 's/\/.*\///g')
 #echo $FILENAME
 #Empty the file
-echo"" > $FILENAME".log" 
-echo "Doing CPU/Memory..."
-echo "CPU AND MEMORY\n--------------" >> $FILENAME".log"
+echo"" 
+echo "CPU AND MEMORY\n--------------"
 #$1 contains the directory of all files used for performance
 for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu*")
 do 
   MACHINE_COUNTER=$((MACHINE_COUNTER+1))
-  echo "* MACHINE $MACHINE_COUNTER *" | column -t >> $FILENAME".log"
-  echo "Iteration | CPU Avg | Deviation CPU | Memory | Deviation Memory (%)  " | column -t >> $FILENAME".log"
+  echo "* MACHINE $MACHINE_COUNTER *"
+  echo "Iteration | CPU Avg | Deviation CPU | Memory | Deviation Memory  (%)  "
   #echo $FOLDER
   for FILE in $(find $FOLDER -name "log_performance_*")
   do
@@ -46,13 +48,16 @@ do
     MEMSUM=$(echo 'scale=3;'$MEMSUM + $NEWMEMAVG|bc)
     TOTALSTRD_DEV_CPU=$(echo 'scale=3;'$TOTALSTRD_DEV_CPU + $STRD_DEV_CPU|bc)
     TOTALSTRD_DEV_MEM=$(echo 'scale=3;'$TOTALSTRD_DEV_MEM + $STRD_DEV_MEM|bc)
-    echo $COUNTER" | "$NEWCPUAVG" | "$STRD_DEV_CPU" | "$NEWMEMAVG" | "$STRD_DEV_MEM | column -t >> $FILENAME".log"
+    echo $COUNTER" | "$NEWCPUAVG" | "$STRD_DEV_CPU" | "$NEWMEMAVG" | "$STRD_DEV_MEM
   done
   COUNTER=0
-  echo "\n" >> $FILENAME".log"
+  echo "\n"
 done
 
-echo "Overall | "$(echo 'scale=3;'$CPUSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_CPU/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$MEMSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_MEM/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
+echo "Overall | "$(echo 'scale=3;'$CPUSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_CPU/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$MEMSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_MEM/$COUNTER_TOTAL|bc)
+
+
+
 
 
 # Call setup time analysis
@@ -61,19 +66,18 @@ STRD_DEV_TIME=0
 #TOTALSTRD_DEV_BW=0
 TIMESUM=0
 COUNTER=0
-MACHINE_COUNTER=0 
-echo "Doing call stablishment time..."
-echo "\n\nSETUP TIME\n--------------" >> $FILENAME".log"
+
+echo "\n\nSETUP TIME\n--------------"
 #$1 contains the directory of all files used for performance
 for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu*")
 do 
   MACHINE_COUNTER=$((MACHINE_COUNTER+1))
-  echo "* MACHINE $MACHINE_COUNTER *" >> $FILENAME".log"
-  echo "Iteration | Time (ms)" | column -t >> $FILENAME".log"
+  echo "* MACHINE $MACHINE_COUNTER *"
+  echo "Iteration | Time (ms)"
   #echo $FOLDER
   for FILE in $(find $FOLDER -name "*StablishmentCall*")
   do
-    NEWTIME=$(cat $FILE|awk '{sum+=$1} END { print "",sum/NR}') 
+    NEWTIME=$(cat $FILE|awk '{sum+=$1} END { print "",sum/NR}')
     #STRD_DEV_BW=$(cat $FILE.txt|awk '{sum+=$2; sumsq+=$2*$2} END {print sqrt(sumsq/NR - (sum/NR)**2)}')
 
     #echo $NEWBWAVG
@@ -92,16 +96,16 @@ do
     TIMESUM=$(echo 'scale=3;'$TIMESUM + $NEWTIME|bc)
     #TOTALSTRD_DEV_BW=$(echo 'scale=3;'$TOTALSTRD_DEV_BW + $STRD_DEV_BW|bc)
     # TOTALSTRD_DEV_MEM=$(echo 'scale=3;'$TOTALSTRD_DEV_MEM + $STRD_DEV_MEM|bc)
-    echo $COUNTER" | "$NEWTIME >> $FILENAME".log" | column -t >> $FILENAME".log"
+    echo $COUNTER" | "$NEWTIME
   done
-  echo "\n" >> $FILENAME".log"
+  echo "\n"
   COUNTER=0
 done
 
 STRD_DEV_TIME=$(cat time_tmp_log|awk '{sum+=$1; sumsq+=$1*$1} END {print sqrt(sumsq/NR - (sum/NR)**2)}')
 rm time_tmp_log
 
-echo "Overall | "$(echo 'scale=3;'$TIMESUM/$COUNTER_TOTAL|bc)" | "$STRD_DEV_TIME" (deviation ms)" | column -t >> $FILENAME".log"
+echo "Overall | "$(echo 'scale=3;'$TIMESUM/$COUNTER_TOTAL|bc)" | "$STRD_DEV_TIME" (deviation ms)"
 
 
 # RTT stats
@@ -110,16 +114,15 @@ RTTSUM=0
 COUNTER=0
 TOTALSTRD_DEV_RTT=0
 COUNTER_TOTAL=0
-MACHINE_COUNTER=0
-echo "Doing RTT..."
-echo "\n\nRTT\n--------------" >> $FILENAME".log"
+
+echo "\n\nRTT\n--------------"
 #$1 contains the directory of all files used for performance
 
 for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu*")
 do 
   MACHINE_COUNTER=$((MACHINE_COUNTER+1))
-  echo "* MACHINE $MACHINE_COUNTER *" >> $FILENAME".log"
-  echo "Iteration | RTT Avg | Deviation RTT (ms)" | column -t >> $FILENAME".log"
+  echo "* MACHINE $MACHINE_COUNTER *"
+  echo "Iteration | RTT Avg (ms) | Deviation RTT (ms)"
   #echo $FOLDER
   for FILE in $(find $FOLDER -name "*RTT*")
   do
@@ -133,14 +136,13 @@ do
 
     RTTSUM=$(echo 'scale=3;'$RTTSUM + $NEWRTTAVG|bc)
     TOTALSTRD_DEV_RTT=$(echo 'scale=3;'$TOTALSTRD_DEV_RTT + $STRD_DEV_RTT|bc)
-    echo $COUNTER" | "$NEWRTTAVG" | "$STRD_DEV_RTT | column -t >> $FILENAME".log"
+    echo $COUNTER" | "$NEWRTTAVG" | "$STRD_DEV_RTT
   done
-  echo "\n" >> $FILENAME".log"
+  echo "\n"
   COUNTER=0
 done
 
-echo "Overall | "$(echo 'scale=3;'$RTTSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_RTT/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
-
+echo "Overall | "$(echo 'scale=3;'$RTTSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_RTT/$COUNTER_TOTAL|bc) 
 
 #BANDWIDTH analysis
 NEWBWAVG=0
@@ -148,16 +150,14 @@ STRD_DEV_BW=0
 TOTALSTRD_DEV_BW=0
 BWSUM=0
 COUNTER=0
-MACHINE_COUNTER=0
-COUNTER_TOTAL=0
-echo "Doing Bandwidth..."
-echo "\n\nBANDWIDTH\n----------------------------\n" >> $FILENAME".log"
+
+echo "\n\nBANDWIDTH TEST ANALYSIS\n----------------------------\n" 
 #$1 contains the directory of all files used for performance
 for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu*")
 do 
   MACHINE_COUNTER=$((MACHINE_COUNTER+1))
-  echo "* MACHINE $MACHINE_COUNTER *" | column -t >> $FILENAME".log"
-  echo "Iteration | SSRC | BW Avg | Deviation BW (Kbit/s)" | column -t >> $FILENAME".log"
+  echo "* MACHINE $MACHINE_COUNTER *"
+  echo "SSRC | BW Avg | Deviation BW"
   #echo $FOLDER
   for FILE_SSRC in $(find $FOLDER -name "*_RV*")
   do
@@ -180,12 +180,12 @@ do
       COUNTER_TOTAL=$((COUNTER_TOTAL+1))
       BWSUM=$(echo 'scale=3;'$BWSUM + $NEWBWAVG|bc)
       TOTALSTRD_DEV_BW=$(echo 'scale=3;'$TOTALSTRD_DEV_BW + $STRD_DEV_BW|bc)
-      echo $COUNTER" | " $SSRC" | "$NEWBWAVG" | "$STRD_DEV_BW | column -t >> $FILENAME".log"
+      echo $COUNTER" | "$NEWBWAVG" | "$STRD_DEV_BW
       rm $FILE_SSRC_CONMON_bitrate.txt
     done
   done
-  echo "\n" >> $FILENAME".log"
+  echo "\n"
   COUNTER=0
 done
 
-echo "Overall | "$(echo 'scale=3;'$BWSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_BW/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
+echo "Overall | "$(echo 'scale=3;'$BWSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_BW/$COUNTER_TOTAL|bc)
