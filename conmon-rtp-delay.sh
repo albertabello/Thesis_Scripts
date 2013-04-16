@@ -6,7 +6,7 @@ name=system("echo $1")
 set terminal pdf color enhanced rounded size 12,4 fsize 14 rounded dash
 #fname '/Library/Fonts/Arial.ttf' 
 #Verdana, Helvetica, Arial, sans-serif
-set output name.".pdf"
+set output name."-delay.pdf"
 set origin 0,0
 set size ratio 0.25
 set key right top inside
