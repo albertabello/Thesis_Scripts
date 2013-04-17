@@ -1,14 +1,26 @@
 #! /bin/sh
-#
 
-for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu3")
+#Calculate packet loss
+#BANDWIDTH analysis
+NEWBWAVG=0
+STRD_DEV_BW=0
+TOTALSTRD_DEV_BW=0
+BWSUM=0
+COUNTER=0
+MACHINE_COUNTER=0
+COUNTER_TOTAL=0
+echo "Doing packet losses..."
+echo "\n\PACKET LOSSES\n----------------------------\n" >> $FILENAME".log"
+#$1 contains the directory of all files used for performance
+for FOLDER in $(find /Users/Albert/Desktop/MTesis/results/no_ipfw_turn_foreman -maxdepth 1 -mindepth 1 -name "*ubuntu*")
 do 
-  for FILE_RTP in $(find $FOLDER  -type d -name "rtp*")
+  MACHINE_COUNTER=$((MACHINE_COUNTER+1))
+  echo "* MACHINE $MACHINE_COUNTER *" | column -t >> $FILENAME".log"
+  echo "Iteration | Packets" | column -t >> $FILENAME".log"
+  #echo $FOLDER
+  for FILE_PL in $(find $FOLDER -name "*_PLvideo*")
   do
-    dir2=${FILE_RTP/lubuntu3/lubuntu4}"/"
-    #dir2=$(dirname $FILE_RTP | sed 's/lubuntu3/lubuntu4/g'"/"
-    dir1=$(echo $FILE_RTP)"/"
-    echo $dir1
-    echo $dir2
+    echo $(cat $FILE_PL | awk '{ sum += $2; } END { print sum; }')
+    COUNTER=$((COUNTER+1))
   done
 done

@@ -37,7 +37,7 @@ def delay_distribution(counter,delay,name):
 def build_output_distribution(iteration):
     newList=[]
     z=0
-    delayPlot = open("output_delay/delay_inc_"+iteration+".txt", 'wb')
+    delayPlot = open("output_delay/distribution_delay_inc_"+iteration+".txt", 'wb')
     logWriter = csv.writer(delayPlot, delimiter='\t')
     logWriter.writerow([0, 0]);
     global delay_array

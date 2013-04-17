@@ -3,7 +3,7 @@
 
 # Deletes spaces in folder name to avoid errors
 find $1 -depth -name "* *" -execdir rename 's/ /_/g' "{}" \;
-
+rm -r output_delay/*
 #Empty files for temp results
 #echo "" > BW_DATA.dat
 echo "" > BW_DATA_2.dat
@@ -63,6 +63,35 @@ done
 
 echo "Overall | "$(echo 'scale=3;'$CPUSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_CPU/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$MEMSUM/$COUNTER_TOTAL|bc)" | "$(echo 'scale=3;'$TOTALSTRD_DEV_MEM/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
 
+#Calculate packet loss
+NEWPL=0
+PLSUM=0
+COUNTER=0
+MACHINE_COUNTER=0
+COUNTER_TOTAL=0
+echo "Doing packet losses..."
+echo "\n\PACKET LOSSES\n----------------------------\n" >> $FILENAME".log"
+#$1 contains the directory of all files used for performance
+for FOLDER in $(find $1 -maxdepth 1 -mindepth 1 -name "*ubuntu*")
+do 
+  MACHINE_COUNTER=$((MACHINE_COUNTER+1))
+  echo "* MACHINE $MACHINE_COUNTER *" | column -t >> $FILENAME".log"
+  echo "Iteration | Packets" | column -t >> $FILENAME".log"
+  #echo $FOLDER
+  for FILE_PL in $(find $FOLDER -name "*_PLvideo*")
+  do
+    NEWPL=$(cat $FILE_PL | awk '{ sum += $2; } END { print sum; }')
+    COUNTER=$((COUNTER+1))
+    COUNTER_TOTAL=$((COUNTER_TOTAL+1))
+    PLSUM=$(echo 'scale=3;'$PLSUM + $NEWPL|bc)
+    echo $COUNTER"\t"$NEWPL>> "PL_DATA_$MACHINE_COUNTER.dat"
+    echo $COUNTER" | "$NEWPL | column -t >> $FILENAME".log"
+  done
+  echo "\n" >> $FILENAME".log"
+  COUNTER=0
+done
+
+echo "Overall | "$(echo 'scale=3;'$PLSUM/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
 
 # Call setup time analysis
 NEWTIME=0
@@ -270,19 +299,95 @@ set xrange [0:1000]
 set grid
 set style fill pattern 5
 set xtics border out scale 0,0 mirror offset character 0, 0, 0
+set title "Delay distribution for all iterations" font ",14"
 
-plot "output_delay/delay_inc_1.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc -1, \
-"output_delay/delay_inc_2.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 1, \
-"output_delay/delay_inc_3.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 2, \
-"output_delay/delay_inc_4.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 3, \
-"output_delay/delay_inc_5.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 4, \
-"output_delay/delay_inc_6.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 5, \
-"output_delay/delay_inc_7.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 6, \
-"output_delay/delay_inc_8.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 7, \
-"output_delay/delay_inc_9.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 8, \
-"output_delay/delay_inc_10.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 9
+plot "output_delay/distribution_delay_inc_1.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc -1, \
+"output_delay/distribution_delay_inc_2.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 1, \
+"output_delay/distribution_delay_inc_3.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 2, \
+"output_delay/distribution_delay_inc_4.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 3, \
+"output_delay/distribution_delay_inc_5.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 4, \
+"output_delay/distribution_delay_inc_6.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 5, \
+"output_delay/distribution_delay_inc_7.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 6, \
+"output_delay/distribution_delay_inc_8.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 7, \
+"output_delay/distribution_delay_inc_9.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 8, \
+"output_delay/distribution_delay_inc_10.txt" using 1:2 with linespoints lw 3 lt -1 pt 6 ps 1.5 lc 9
 EOF
-  
+
+echo "Calculating delay average and deviation..."
+# Calculate average and standard deviation for 
+
+COUNTER_TOTAL=0
+COUNTER1=0
+COUNTER2=0
+AVGDELAY=0
+TOTALSTRD_DEV_DELAY=0
+MACHINE_COUNT=1
+echo "\n\nDELAY\n----------------------------\n" >> $FILENAME".log"
+for FILE in $(find ./output_delay  -name "delay_*.txt" | sort -n -t _ -k 3)
+do
+  #Convert points to commas for processing
+  tr '.' ',' < $FILE > tmp.txt
+  #echo $FILE
+  NEWAVGDELAY=$(cat tmp.txt|awk '{sum+=$3} END { print "",(sum/NR)*1000}')
+  STRD_DEV_DELAY=$(cat tmp.txt|awk '{sum+=$3; sumsq+=$3*$3} END {print ((sqrt(sumsq/NR - (sum/NR)**2)/2))*1000}')
+
+  COUNTER_TOTAL=$((COUNTER_TOTAL+1))
+  NEWAVGDELAY=`echo $NEWAVGDELAY | tr ',' '.'`
+  STRD_DEV_DELAY=`echo $STRD_DEV_DELAY | tr ',' '.'`
+  TOTALSTRD_DEV_DELAY=$(echo "scale=3;$TOTALSTRD_DEV_DELAY+$STRD_DEV_DELAY" | bc)
+  AVGDELAY=$(echo "scale=3;$AVGDELAY + $NEWAVGDELAY" | bc)
+  if [ $MACHINE_COUNT -eq "1" ]
+  then
+  COUNTER1=$((COUNTER1+1))
+  echo $COUNTER1"\t"$NEWAVGDELAY"\t"$STRD_DEV_DELAY >> "machine1.dat"
+    echo $COUNTER1" | "$NEWAVGDELAY" | "$STRD_DEV_DELAY | column -t >> "machine1.tmp"
+    MACHINE_COUNT=$(($MACHINE_COUNT + 1))
+  else
+    COUNTER2=$((COUNTER2+1))
+    echo $COUNTER1"\t"$NEWAVGDELAY"\t"$STRD_DEV_DELAY >> "machine2.dat"
+    echo $COUNTER2" | "$NEWAVGDELAY" | "$STRD_DEV_DELAY | column -t >> "machine2.tmp"
+    MACHINE_COUNT=$(($MACHINE_COUNT - 1))
+  fi
+done
+echo "* MACHINE 1 *" >> $FILENAME".log"
+echo "Iteration | Delay Avg | Deviation delay (ms)" | column -t >> $FILENAME".log"
+cat machine1.tmp >> $FILENAME".log"
+echo "\n" >> $FILENAME".log"
+echo "\n* MACHINE 2 *" >> $FILENAME".log"
+echo "Iteration | Delay Avg | Deviation delay (ms)" | column -t >> $FILENAME".log"
+cat machine2.tmp >> $FILENAME".log"
+echo "\n" >> $FILENAME".log"
+echo "\nOverall | "$(echo 'scale=4;'$AVGDELAY/$COUNTER_TOTAL|bc)" | "$(echo 'scale=4;'$TOTALSTRD_DEV_DELAY/$COUNTER_TOTAL|bc) | column -t >> $FILENAME".log"
+
+echo "Plotting delay average and deviation..."
+# We are using bitrate.txt for the data
+gnuplot << EOF
+reset
+set terminal pdf color enhanced rounded size 12,4 fsize 10
+set output 'output_delay/mean_deviation_delay.pdf'
+#unset key 
+set ylabel "Delay [ms]"
+
+set xrange [ 0.00000 : 10.5000 ]
+set yrange [ 0 : 50 ]
+
+set grid
+
+set title "Mean and deviation for delay" font ",14"
+set xlabel "Iterations"
+plot "machine1.dat" u (column(1)-0.1):2:3 with yerrorbars lt -1 pi -6 pt 7 lc 4 lw 5 ps 1.5 title "Machine A", \
+"machine2.dat" u (column(1)+0.1):2:3 with yerrorbars lt -1 pi -6 pt 7 lc 6 lw 5 ps 1.5 title "Machine B"
+EOF
+rm machine1.dat
+rm machine2.dat
+rm machine2.tmp
+rm machine1.tmp
+rm tmp.txt
+
+
+echo "Done all"
+rm PL_DATA_2.dat
+rm PL_DATA_1.dat
 rm BW_DATA_2.dat
 rm BW_DATA_1.dat
 rm BW_DATA.dat
